@@ -27,7 +27,7 @@ var markerlist2=[]
         }).addTo(map2);
 
 function updateMap2(lat,lon){
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent('[out:json];node[amenity=pharmacy](around:10000,' + lat + ',' + lon + ');out;')}`;
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent('[out:json];node[amenity=pharmacy](around:5000,' + lat + ',' + lon + ');out;')}`;
 
     console.log(url);
     
