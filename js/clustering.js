@@ -26,37 +26,42 @@ var markerlist2=[]
 	        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
         }).addTo(map2);
 
-function updateMap2(lat,lon){
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent('[out:json];node[amenity=pharmacy](around:5000,' + lat + ',' + lon + ');out;')}`;
+function updateMap2(lat, lon) {
+    // Show a "searching" message on the map while waiting
+    var loading = L.control({ position: 'topright' });
+    loading.onAdd = function () {
+        var div = L.DomUtil.create('div');
+        div.style.cssText = 'background:white;padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-size:13px;';
+        div.innerHTML = 'Searching for nearby pharmacies...';
+        return div;
+    };
+    loading.addTo(map2);
 
-    console.log(url);
-    
-    $.getJSON(url,function(data){
+    // Smaller radius (5 km) and a time limit make the search faster
+    const query = '[out:json][timeout:15];node[amenity=pharmacy](around:5000,' + lat + ',' + lon + ');out;';
+    const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
 
-        let stations = data.elements; // Correct field from Overpass API response
-       
-       
-        // Extract station names and temperatures
-        
-        $.each(stations, function(index, station) {
-            let name = station.tags?.name || "Unknown Pharmacy"; // Handle missing names
-            let phone = station.tags?.phone || "No phone available"; // Handle missing phone numbers
-            var marker2= L.marker(L.latLng(station.lat, station.lon));
-            marker2.bindPopup("Name: " + name + " <br> Phone Number: "+ phone);
-            markerlist2.push(marker2);   
-            });
-            var markers2 = L.markerClusterGroup();
+    $.getJSON(url, function (data) {
+        var markers2 = L.markerClusterGroup();
 
-
-      markers2.addLayers(markerlist2);
-      map2.addLayer(markers2);
-
-          
+        $.each(data.elements, function (index, station) {
+            let name = station.tags?.name || "Unknown Pharmacy";
+            let phone = station.tags?.phone || "No phone available";
+            var marker2 = L.marker(L.latLng(station.lat, station.lon));
+            marker2.bindPopup("Name: " + name + "<br>Phone Number: " + phone);
+            markers2.addLayer(marker2);
         });
-        
 
-
+        map2.addLayer(markers2);
+        map2.removeControl(loading);
+    }).fail(function () {
+        map2.removeControl(loading);
+        alert("Could not load nearby pharmacies right now. Please try again in a minute.");
+    });
 }
+
+
+
 
 
 
